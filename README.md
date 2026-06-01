@@ -81,12 +81,3 @@ Contributions are welcome! If you find a bug, have a feature request, or want to
 This project is licensed under the MIT License - see the LICENSE file for details (or specify your license here).
 
 ```
-
-***
-
-### 💡 How to add this to your repository:
-1. On your GitHub repository page, click the green **[Add a README](https://github.com/ChoksiecutieXDD/VaultWare.Shield/new/master?filename=README.md)** button.
-2. Copy the code block above and paste it into the editor.
-3. Scroll down, write a short commit message (like *"Add README.md"*), and click **Commit changes**.
-
-```
