@@ -79,5 +79,3 @@ Contributions are welcome! If you find a bug, have a feature request, or want to
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details (or specify your license here).
-
-```
