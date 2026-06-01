@@ -1,0 +1,223 @@
+﻿@model List<VaultWare.Shield.Models.ScanResult>
+@{
+    ViewData["Title"] = "System Scanner";
+}
+
+<style>
+    .scan-radar {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        border: 2px solid rgba(0, 212, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 40px;
+        position: relative;
+        background: radial-gradient(circle, rgba(0,212,255,0.05) 0%, transparent 70%);
+        transition: all 0.5s ease;
+    }
+
+    .scan-radar.active {
+        border-color: var(--neon-green);
+        box-shadow: 0 0 50px rgba(0, 255, 157, 0.1);
+    }
+
+    .scan-radar.active::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        border-top-color: var(--neon-green);
+        animation: spin 1.5s linear infinite;
+    }
+
+    .scan-radar.complete {
+        border-color: var(--neon-blue);
+        background: rgba(0, 212, 255, 0.1);
+        box-shadow: 0 0 30px var(--neon-blue);
+    }
+    @@keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .counter-text {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 3.5rem;
+        font-weight: 700;
+        line-height: 1;
+        text-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    .status-text {
+        font-family: 'Rajdhani', sans-serif;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: rgba(255,255,255,0.5);
+    }
+
+    #scanActive, #scanFinished, #customScanInput {
+        display: none;
+    }
+</style>
+
+<div class="container mt-4 fade-in-up">
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold" style="letter-spacing: 2px;">SYSTEM <span style="color:var(--neon-blue)">SCANNER</span></h1>
+        <p class="text-muted">Deep analysis of system files, registry, and processes.</p>
+    </div>
+
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <div class="glass-panel p-5 text-center position-relative overflow-hidden">
+
+                <div id="scanIdle">
+                    <div class="scan-radar"><span class="material-symbols-outlined" style="font-size: 5rem; color: var(--neon-blue);">radar</span></div>
+                    <h3 class="text-white fw-bold mb-4">Select Scan Type</h3>
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        <button class="btn btn-lg btn-info px-5 fw-bold" onclick="startScan('quick')"><span class="material-symbols-outlined align-middle me-2">flash_on</span> QUICK</button>
+                        <button class="btn btn-lg btn-outline-light px-5 fw-bold" onclick="startScan('full')"><span class="material-symbols-outlined align-middle me-2">travel_explore</span> FULL</button>
+                        <button class="btn btn-lg btn-outline-secondary px-4 fw-bold" onclick="toggleCustom()">CUSTOM</button>
+                    </div>
+                    <div id="customScanInput" class="mt-4 mx-auto" style="max-width: 400px;">
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-muted"><span class="material-symbols-outlined">folder</span></span>
+                            <input type="text" id="customPath" class="form-control bg-dark text-white border-secondary" placeholder="C:\Users\YourName\Desktop">
+                            <button class="btn btn-info fw-bold" onclick="startCustom()">GO</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="scanActive">
+                    <div class="scan-radar active"><span class="material-symbols-outlined" style="font-size: 5rem; color: var(--neon-green);">search</span></div>
+                    <div class="status-text mb-2">SCANNING SYSTEM FILES...</div>
+                    <div class="counter-text text-white" id="fileCounter">0</div>
+                    <div class="small text-muted mb-4">FILES ANALYZED</div>
+                    <div class="bg-dark bg-opacity-50 p-2 rounded border border-secondary d-inline-block px-4 mb-4">
+                        <span class="text-muted font-monospace small" id="currentFile">Initializing engine...</span>
+                    </div>
+                    <div><button class="btn btn-outline-danger px-5 fw-bold" onclick="stopScan()"><span class="material-symbols-outlined align-middle me-2">stop_circle</span> STOP SCAN</button></div>
+                </div>
+
+                <div id="scanFinished">
+                    <div class="scan-radar complete"><span class="material-symbols-outlined" style="font-size: 5rem; color: var(--neon-blue);">check_circle</span></div>
+                    <h2 class="fw-bold text-white">Scan Complete</h2>
+                    <p class="text-muted" id="finishMessage">Analysis finished successfully.</p>
+                    <div class="row justify-content-center mt-5 mb-4">
+                        <div class="col-4 border-end border-secondary"><h3 class="text-white fw-bold counter-text" id="resFiles" style="font-size: 2.5rem;">0</h3><small class="text-muted status-text">FILES</small></div>
+                        <div class="col-4"><h3 class="text-danger fw-bold counter-text" id="resThreats" style="font-size: 2.5rem;">0</h3><small class="text-muted status-text">THREATS</small></div>
+                    </div>
+                    <button class="btn btn-primary mt-3 px-5 fw-bold" onclick="resetUI()">DONE</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-panel p-0 overflow-hidden">
+        <div class="p-3 border-bottom border-secondary bg-dark bg-opacity-50 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold"><span class="material-symbols-outlined me-2 text-muted">history</span> Recent Scans</h5>
+            
+            <a href="/Home/CleanScanHistory" class="btn btn-sm btn-outline-danger d-flex align-items-center" onclick="return confirm('Clear all scan logs?');">
+                <span class="material-symbols-outlined me-1" style="font-size:1rem;">delete</span> CLEAR HISTORY
+            </a>
+        </div>
+        <table class="table table-dark table-hover mb-0" style="background: transparent;">
+            <thead><tr><th class="p-3 text-muted">DATE</th><th class="p-3 text-muted">TYPE</th><th class="p-3 text-muted">FILES</th><th class="p-3 text-muted">THREATS</th><th class="p-3 text-muted">STATUS</th></tr></thead>
+            <tbody>
+                @if (Model == null || Model.Count == 0)
+                {
+                    <tr><td colspan="5" class="text-center p-5 text-muted">No scan history available.</td></tr>
+                }
+                else
+                {
+                    foreach (var scan in Model)
+                    {
+                        <tr>
+                            <td class="p-3 align-middle">@scan.CompletedAt.ToString("MMM dd, HH:mm")</td>
+                            <td class="p-3 align-middle text-info fw-bold text-uppercase">@scan.ScanType</td>
+                            <td class="p-3 align-middle">@scan.FilesChecked</td>
+                            <td class="p-3 align-middle @(scan.ThreatsFound > 0 ? "text-danger fw-bold" : "text-success")">@scan.ThreatsFound</td>
+                            <td class="p-3 align-middle">
+                                @if (scan.Status == "Completed")
+                                {
+                                    <span class="badge bg-success">COMPLETED</span>
+                                }
+                                else if (scan.Status == "Aborted")
+                                {
+                                    <span class="badge bg-warning text-dark">ABORTED</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">FAILED</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    var interval;
+    function toggleCustom() { var el = document.getElementById('customScanInput'); el.style.display = (el.style.display == 'none' ? 'block' : 'none'); }
+    function resetUI() { window.location.reload(); }
+    function startCustom() { var p = document.getElementById('customPath').value; if(p) startScan('custom', p); }
+    function stopScan() { fetch('/Home/StopScan', { method: 'POST' }); }
+
+    function startScan(type, path) {
+        document.getElementById('scanIdle').style.display = 'none';
+        document.getElementById('scanActive').style.display = 'block';
+        document.getElementById('scanFinished').style.display = 'none';
+        var url = '/Home/StartScan?type=' + type;
+        if(path) url += '&customPath=' + encodeURIComponent(path);
+        fetch(url, { method: 'POST' }).then(r => startTracking());
+    }
+
+    function startTracking() {
+        if(interval) clearInterval(interval);
+        interval = setInterval(() => {
+            fetch('/Home/GetScanProgress?t=' + Date.now()).then(r => r.json()).then(data => {
+                if (data.isScanning) {
+                    document.getElementById('scanIdle').style.display = 'none';
+                    document.getElementById('scanActive').style.display = 'block';
+                    document.getElementById('fileCounter').innerText = data.filesScanned.toLocaleString();
+                    var fName = data.currentFile || "Initializing...";
+                    if(fName.length > 40) fName = "..." + fName.substring(fName.length - 40);
+                    document.getElementById('currentFile').innerText = fName;
+                } else {
+                    clearInterval(interval);
+                    showFinishedState(data);
+                }
+            });
+        }, 300);
+    }
+
+    function showFinishedState(data) {
+        document.getElementById('scanActive').style.display = 'none';
+        document.getElementById('scanFinished').style.display = 'block';
+        document.getElementById('resFiles').innerText = data.filesScanned.toLocaleString();
+        document.getElementById('resThreats').innerText = data.threats;
+        var msg = document.getElementById('finishMessage');
+        if(data.threats > 0) { msg.innerText = "Threats were detected. Check Vault."; msg.className = "text-danger fw-bold"; }
+        else { msg.innerText = "System is clean."; msg.className = "text-success fw-bold"; }
+    }
+
+    window.addEventListener('load', function() {
+        fetch('/Home/GetScanProgress?t=' + Date.now()).then(r => r.json()).then(data => {
+            if(data.isScanning) {
+                document.getElementById('scanIdle').style.display = 'none';
+                document.getElementById('scanActive').style.display = 'block';
+                startTracking();
+            }
+        });
+    });
+</script>

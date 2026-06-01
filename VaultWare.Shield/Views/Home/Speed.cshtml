@@ -1,0 +1,292 @@
+﻿@model List<VaultWare.Shield.Models.AuditItem>
+@{
+    ViewData["Title"] = "System Speed";
+}
+
+<style>
+    .speed-card {
+        background: rgba(30, 35, 45, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.3s ease;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .speed-card:hover {
+            background: rgba(30, 35, 45, 0.9);
+            border-color: var(--neon-blue);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.1);
+        }
+
+    .icon-box {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+    }
+
+    .action-btn {
+        width: 100%;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    /* Console/Log Table Styling */
+    .log-container {
+        background: #050505;
+        border: 1px solid #333;
+        border-radius: 8px;
+        font-family: 'Consolas', 'Courier New', monospace;
+        max-height: 300px; /* Limits height so you can scroll */
+        overflow-y: auto;
+        display: none;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    }
+
+    .log-table th {
+        background: #111;
+        color: #888;
+        font-size: 0.8rem;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .log-table td {
+        color: #0f0;
+        font-size: 0.85rem;
+        border-bottom: 1px solid #222;
+        padding: 8px 15px;
+    }
+
+    /* Custom Scrollbar */
+    .log-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .log-container::-webkit-scrollbar-track {
+        background: #111;
+    }
+
+    .log-container::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 4px;
+    }
+
+        .log-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+</style>
+
+<div class="container mt-4 fade-in-up">
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold">SYSTEM <span style="color:var(--neon-blue)">OPTIMIZER</span></h1>
+        <p class="text-muted">Boost performance by cleaning junk and optimizing resources.</p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="speed-card">
+                <div class="icon-box"><span class="material-symbols-outlined" style="font-size: 3rem; color: #00ff9d;">memory</span></div>
+                <h4 class="text-white fw-bold">RAM BOOSTER</h4>
+                <p class="text-muted small">Release unused memory from the working set.</p>
+                <button class="btn btn-outline-success action-btn mt-3" onclick="runOptimization('RAM', this)">BOOST NOW</button>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="speed-card">
+                <div class="icon-box"><span class="material-symbols-outlined" style="font-size: 3rem; color: #ffaa00;">delete_sweep</span></div>
+                <h4 class="text-white fw-bold">JUNK CLEANER</h4>
+                <p class="text-muted small">Scan and delete temporary system files.</p>
+                <button class="btn btn-outline-warning action-btn mt-3" onclick="runOptimization('JUNK', this)">CLEAN NOW</button>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="speed-card">
+                <div class="icon-box"><span class="material-symbols-outlined" style="font-size: 3rem; color: #ff0055;">history_toggle_off</span></div>
+                <h4 class="text-white fw-bold">CACHE ERASER</h4>
+                <p class="text-muted small">Wipe browser cache and tracking cookies.</p>
+                <button class="btn btn-outline-danger action-btn mt-3" onclick="runOptimization('CACHE', this)">ERASE NOW</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultSection" style="display:none;" class="mb-5 fade-in-up">
+        <h5 class="text-white fw-bold mb-3 d-flex align-items-center">
+            <span class="material-symbols-outlined me-2 text-info">terminal</span>
+            Live Operation Log
+            <span class="spinner-border spinner-border-sm text-info ms-3" id="logSpinner" role="status"></span>
+        </h5>
+        <div class="log-container p-0" id="logContainerBox">
+            <table class="table table-dark table-borderless log-table mb-0">
+                <thead>
+                    <tr>
+                        <th width="15%">STATUS</th>
+                        <th width="65%">FILE / ACTION</th>
+                        <th width="20%">RESULT</th>
+                    </tr>
+                </thead>
+                <tbody id="logTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="glass-panel p-0 overflow-hidden">
+        <div class="p-3 border-bottom border-secondary bg-dark bg-opacity-50 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold"><span class="material-symbols-outlined me-2 text-muted">history</span> Recent Optimizations</h5>
+
+            @if (Model != null && Model.Count > 0)
+            {
+                <a href="/Home/ClearSpeedLogs" class="btn btn-sm btn-outline-danger d-flex align-items-center" onclick="return confirm('Clear optimization history?');">
+                    <span class="material-symbols-outlined me-1" style="font-size:1rem;">delete</span> CLEAR HISTORY
+                </a>
+            }
+        </div>
+        <table class="table table-dark table-hover mb-0" style="background: transparent;">
+            <thead><tr><th class="p-3 text-muted">TIME</th><th class="p-3 text-muted">ACTION</th><th class="p-3 text-muted">DETAILS</th></tr></thead>
+            <tbody>
+                @if (Model == null || Model.Count == 0)
+                {
+                    <tr><td colspan="3" class="text-center p-5 text-muted">No recent optimizations found.</td></tr>
+                }
+                else
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="p-3 align-middle text-muted">@item.Timestamp.ToString("HH:mm:ss")</td>
+                            <td class="p-3 align-middle fw-bold text-success">@item.FileName</td>
+                            <td class="p-3 align-middle">@item.Details</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="speedModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel border-info" style="background: rgba(15, 25, 35, 0.98);">
+            <div class="modal-body text-center p-4">
+
+                <div class="mb-3">
+                    <span class="material-symbols-outlined text-info" style="font-size: 4rem;">rocket_launch</span>
+                </div>
+
+                <h3 class="text-white fw-bold mb-1">Optimization Complete</h3>
+                <p class="text-muted mb-4">System resources have been optimized.</p>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="p-3 border border-secondary rounded bg-dark bg-opacity-50">
+                            <small class="text-muted d-block text-uppercase" style="font-size:0.7rem;">Statistic</small>
+                            <span class="fw-bold text-white fs-4" id="statLabel">RECOVERED</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 border border-secondary rounded bg-dark bg-opacity-50">
+                            <small class="text-muted d-block text-uppercase" style="font-size:0.7rem;">Value</small>
+                            <span class="fw-bold text-success fs-4" id="statValue">0 MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-info fw-bold px-5" onclick="location.reload()">AWESOME</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function runOptimization(type, btn) {
+        var originalText = btn.innerText;
+        btn.innerText = "SCANNING...";
+        btn.disabled = true;
+
+        // Reset and Show Log Area
+        var resultSection = document.getElementById('resultSection');
+        var tbody = document.getElementById('logTableBody');
+        var spinner = document.getElementById('logSpinner');
+        var container = document.getElementById('logContainerBox');
+
+        tbody.innerHTML = '';
+        resultSection.style.display = 'block';
+        container.style.display = 'block';
+        spinner.style.display = 'inline-block';
+
+        // Scroll to logs
+        resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        fetch('/Home/PerformSpeedAction?action=' + type, { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                var label = data.statLabel || data.StatLabel || "DONE";
+                var value = data.statValue || data.StatValue || "Success";
+                var details = data.details || data.Details || [];
+
+                // 1. ANIMATE THE "FILL" / SEE FILES
+                if (details.length > 0) {
+                    let i = 0;
+                    function addRow() {
+                        if (i < details.length) {
+                            var file = details[i];
+                            // Truncate long paths visually
+                            var displayFile = file.length > 60 ? "..." + file.substring(file.length - 60) : file;
+
+                            var row = `<tr>
+                                <td class="text-success"><span class="badge bg-success bg-opacity-25 text-success">CLEANED</span></td>
+                                <td class="text-muted font-monospace small" title="${file}">${displayFile}</td>
+                                <td class="text-info">OK</td>
+                            </tr>`;
+                            tbody.innerHTML += row;
+
+                            // Auto scroll to bottom
+                            container.scrollTop = container.scrollHeight;
+
+                            i++;
+                            // Fast speed (30ms) for waterfall effect
+                            setTimeout(addRow, 30);
+                        } else {
+                            // Finished Animation
+                            spinner.style.display = 'none';
+                            showModal(label, value, btn, originalText);
+                        }
+                    }
+                    addRow();
+                } else {
+                    // No files to show, show modal immediately
+                    spinner.style.display = 'none';
+                    showModal(label, value, btn, originalText);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Error: " + err);
+                btn.innerText = originalText;
+                btn.disabled = false;
+            });
+    }
+
+    function showModal(label, value, btn, originalText) {
+        setTimeout(() => {
+            document.getElementById('statLabel').innerText = label;
+            document.getElementById('statValue').innerText = value;
+            new bootstrap.Modal(document.getElementById('speedModal')).show();
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }, 500);
+    }
+</script>

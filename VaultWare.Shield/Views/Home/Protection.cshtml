@@ -1,0 +1,135 @@
+﻿@{
+    ViewData["Title"] = "System Protection";
+    bool realTime = VaultWare.Shield.Models.SecurityEngine.IsActive;
+    bool cloud = VaultWare.Shield.Models.SecurityEngine.IsWebActive;
+    bool tamper = VaultWare.Shield.Models.SecurityEngine.IsRansomwareActive;
+    bool firewall = VaultWare.Shield.Models.SecurityEngine.IsFirewallActive;
+}
+
+<style>
+    .protection-row {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        min-height: 100px;
+    }
+
+        .protection-row:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+    .icon-box {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0,0,0,0.2);
+        border-radius: 10px;
+    }
+        /* Icon Size inside the box */
+        .icon-box .material-symbols-outlined {
+            font-size: 28px;
+        }
+
+    .status-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        justify-content: center;
+        margin-right: 20px;
+        min-width: 100px;
+    }
+
+    .switch-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
+</style>
+
+<div class="container mt-4 fade-in-up">
+    <div class="d-flex align-items-center mb-4">
+        <div class="me-3 header-icon-bg" style="display:flex; align-items:center; justify-content:center; width:50px; height:50px; background:rgba(0,212,255,0.1); border-radius:12px; color:var(--neon-blue);">
+            <span class="material-symbols-outlined" style="font-size: 32px;">verified_user</span>
+        </div>
+        <div>
+            <h2 style="font-weight: 700; letter-spacing: 1px; margin-bottom: 0;">SYSTEM <span style="color:var(--neon-blue)">PROTECTION</span></h2>
+            <p class="text-muted mb-0 small">Manage your active defense layers.</p>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="protection-row p-4 d-flex align-items-center justify-content-between" style="border-left: 5px solid var(--neon-blue);">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box text-info me-4"><span class="material-symbols-outlined">shield</span></div>
+                    <div><h5 class="fw-bold text-white mb-1">Real-Time Protection</h5><p class="text-muted small mb-0">Continuously monitors file activity and blocks malware.</p></div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="status-container border-end border-secondary pe-3 me-3"><span class="badge @(realTime ? "bg-success" : "bg-danger") mb-1">@(realTime ? "ACTIVE" : "OFFLINE")</span><small class="text-muted" style="font-size: 0.7rem;">CORE ENGINE</small></div>
+                    <div class="switch-container"><input class="form-check-input" type="checkbox" @(realTime ? "checked" : "") onclick="handleToggle(this, 'RealTime')" style="transform: scale(1.6); cursor: pointer;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="protection-row p-4 d-flex align-items-center justify-content-between" style="border-left: 5px solid #bf00ff;">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box me-4" style="color: #bf00ff !important;"><span class="material-symbols-outlined">cloud</span></div>
+                    <div><h5 class="fw-bold text-white mb-1">Cloud-Delivered Protection</h5><p class="text-muted small mb-0">Uses cloud intelligence to identify new threats.</p></div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="status-container border-end border-secondary pe-3 me-3"><span class="badge @(cloud ? "bg-success" : "bg-danger") mb-1">@(cloud ? "ACTIVE" : "OFFLINE")</span><small class="text-muted" style="font-size: 0.7rem;">WEB SHIELD</small></div>
+                    <div class="switch-container"><input class="form-check-input" type="checkbox" @(cloud ? "checked" : "") onclick="handleToggle(this, 'Web')" style="transform: scale(1.6); cursor: pointer;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="protection-row p-4 d-flex align-items-center justify-content-between" style="border-left: 5px solid var(--neon-green);">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box text-success me-4"><span class="material-symbols-outlined">lock</span></div>
+                    <div><h5 class="fw-bold text-white mb-1">Tamper Protection</h5><p class="text-muted small mb-0">Prevents malicious apps from modifying settings.</p></div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="status-container border-end border-secondary pe-3 me-3"><span class="badge @(tamper ? "bg-success" : "bg-danger") mb-1">@(tamper ? "ACTIVE" : "OFFLINE")</span><small class="text-muted" style="font-size: 0.7rem;">SELF-DEFENSE</small></div>
+                    <div class="switch-container"><input class="form-check-input" type="checkbox" @(tamper ? "checked" : "") onclick="handleToggle(this, 'Ransomware')" style="transform: scale(1.6); cursor: pointer;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="protection-row p-4 d-flex align-items-center justify-content-between" style="border-left: 5px solid var(--neon-red);">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box text-danger me-4"><span class="material-symbols-outlined">local_fire_department</span></div>
+                    <div><h5 class="fw-bold text-white mb-1">Firewall Monitor</h5><p class="text-muted small mb-0">Controls the Windows Defender Firewall state.</p></div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="status-container border-end border-secondary pe-3 me-3"><span class="badge @(firewall ? "bg-success" : "bg-danger") mb-1">@(firewall ? "ACTIVE" : "OFFLINE")</span><small class="text-muted" style="font-size: 0.7rem;">NETWORK</small></div>
+                    <div class="switch-container"><input class="form-check-input" type="checkbox" @(firewall ? "checked" : "") onclick="handleToggle(this, 'Firewall')" style="transform: scale(1.6); cursor: pointer;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="disableWarningModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel border-warning" style="background: rgba(40, 30, 10, 0.98);">
+            <div class="modal-body text-center p-4">
+                <div class="mb-3 text-warning"><span class="material-symbols-outlined" style="font-size: 4rem;">warning</span></div>
+                <h4 class="text-white fw-bold">Security Warning</h4>
+                <p class="text-muted">Do you want to allow this app to make changes to your device?</p>
+                <div class="d-flex justify-content-center gap-2"><button type="button" class="btn btn-warning fw-bold px-4" onclick="confirmDisable()">Yes, Proceed</button><button type="button" class="btn btn-outline-light px-4" onclick="cancelDisable()">No, Cancel</button></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>var pendingFeature="",pendingCheckbox=null;function handleToggle(e,n){pendingFeature=n,pendingCheckbox=e,e.checked=!e.checked,new bootstrap.Modal(document.getElementById("disableWarningModal")).show()}function confirmDisable(){pendingCheckbox&&(pendingCheckbox.checked=!pendingCheckbox.checked),window.location.href="/Home/ToggleFeature?feature="+pendingFeature}function cancelDisable(){bootstrap.Modal.getInstance(document.getElementById("disableWarningModal")).hide()}</script>

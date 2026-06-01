@@ -1,0 +1,343 @@
+﻿@{
+    ViewData["Title"] = "Global Settings";
+    string pcName = Environment.MachineName;
+    string osVersion = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+    string userName = Environment.UserName;
+    string processorCount = Environment.ProcessorCount + " Cores";
+    var whitelist = ViewBag.Whitelist as List<string>;
+    var blacklist = ViewBag.Blacklist as List<string>;
+    bool realTime = VaultWare.Shield.Models.SecurityEngine.IsActive;
+    bool cloud = VaultWare.Shield.Models.SecurityEngine.IsWebActive;
+    bool tamper = VaultWare.Shield.Models.SecurityEngine.IsRansomwareActive;
+    bool firewall = VaultWare.Shield.Models.SecurityEngine.IsFirewallActive;
+    string currentReportPath = ViewBag.ReportPath;
+}
+
+<div class="container mt-4 fade-in-up">
+    <h2 style="font-weight: 700; letter-spacing: 1px;">GLOBAL <span style="color:var(--neon-blue)">SETTINGS</span></h2>
+    <p class="text-muted mb-4">Manage protection protocols and system preferences.</p>
+
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="glass-panel p-0 overflow-hidden">
+                <div class="list-group list-group-flush bg-transparent">
+                    <a href="#" onclick="showTab('virus')" class="list-group-item list-group-item-action bg-transparent text-white border-0 p-3 settings-tab active-tab" id="tab-virus">
+                        <span class="material-symbols-outlined me-2">shield</span> <span class="fw-bold">VIRUS & THREAT</span>
+                    </a>
+                    <a href="#" onclick="showTab('account')" class="list-group-item list-group-item-action bg-transparent text-muted border-0 p-3 settings-tab" id="tab-account">
+                        <span class="material-symbols-outlined me-2">person</span> ACCOUNT
+                    </a>
+                    <a href="#" onclick="showTab('firewall')" class="list-group-item list-group-item-action bg-transparent text-muted border-0 p-3 settings-tab" id="tab-firewall">
+                        <span class="material-symbols-outlined me-2">local_fire_department</span> FIREWALL
+                    </a>
+                    <a href="#" onclick="showTab('device')" class="list-group-item list-group-item-action bg-transparent text-muted border-0 p-3 settings-tab" id="tab-device">
+                        <span class="material-symbols-outlined me-2">phonelink_lock</span> DEVICE
+                    </a>
+                    <a href="#" onclick="showTab('maintenance')" class="list-group-item list-group-item-action bg-transparent text-muted border-0 p-3 settings-tab" id="tab-maintenance">
+                        <span class="material-symbols-outlined me-2 text-warning">cleaning_services</span> MAINTENANCE & LOGS
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+
+            <div id="content-virus" class="settings-content">
+                <div class="glass-panel p-4 mb-4">
+                    <h5 class="fw-bold text-white mb-3">Current threats</h5>
+                    <div class="d-flex align-items-start">
+                        <div class="me-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: @(realTime ? "var(--neon-green)" : "var(--neon-red)"); color: black;">
+                            <span class="material-symbols-outlined" style="font-size: 2.5rem;">@(realTime ? "check_circle" : "gpp_bad")</span>
+                        </div>
+                        <div class="d-flex flex-column justify-content-center">
+                            <h6 class="fw-bold text-white mb-1">@(realTime ? "No current threats." : "Protection is OFF.")</h6>
+                            <p class="text-muted small mb-2">Last scan: Today at @DateTime.Now.ToString("t") (Quick scan)</p>
+                            <div><a href="/Home/Scan" class="btn btn-outline-info btn-sm px-4">Quick scan</a></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-4 mb-4">
+                    <h5 class="fw-bold text-white mb-3">Virus & threat protection settings</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="pe-3 d-flex flex-column"><span class="fw-bold text-white">Real-time protection</span><small class="text-muted">Locates and stops malware instantly.</small></div>
+                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="switch-realtime" @(realTime ? "checked" : "") onclick="handleToggle(this, 'RealTime')" style="transform: scale(1.5); cursor: pointer;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="pe-3 d-flex flex-column"><span class="fw-bold text-white">Cloud-delivered protection</span><small class="text-muted">Increased protection.</small></div>
+                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="switch-cloud" @(cloud ? "checked" : "") onclick="handleToggle(this, 'Web')" style="transform: scale(1.5); cursor: pointer;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="pe-3 d-flex flex-column"><span class="fw-bold text-white">Tamper Protection</span><small class="text-muted">Prevents malicious apps from changing settings.</small></div>
+                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="switch-tamper" @(tamper ? "checked" : "") onclick="handleToggle(this, 'Ransomware')" style="transform: scale(1.5); cursor: pointer;"></div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-4 mb-4 border-success" style="border-left: 4px solid var(--neon-green);">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex flex-column"><h5 class="fw-bold text-white mb-0">Exclusions</h5><small class="text-muted">The scanner will ignore these folders.</small></div>
+                        <button onclick="showWhitelistModal()" class="btn btn-sm btn-outline-success">+ Add Exclusion</button>
+                    </div>
+                    <ul class="list-group">
+                        @if (whitelist != null)
+                        {
+                            foreach (var p in whitelist)
+                            {
+                                <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
+                                    <span class="font-monospace small">@p</span>
+                                    <a href="/Home/RemoveWhitelist?path=@System.Net.WebUtility.UrlEncode(p)" class="text-danger fw-bold text-decoration-none">×</a>
+                                </li>
+                            }
+                        }
+                    </ul>
+                </div>
+
+                <div class="glass-panel p-4 mb-4 border-danger" style="border-left: 4px solid var(--neon-red);">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex flex-column"><h5 class="fw-bold text-white mb-0">Banned Signatures</h5><small class="text-muted">Blocked hashes.</small></div>
+                        <button onclick="showBanModal()" class="btn btn-sm btn-outline-danger">+ Add Ban</button>
+                    </div>
+                    <ul class="list-group">
+                        @if (blacklist != null)
+                        {
+                            foreach (var h in blacklist)
+                            {
+                                <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
+                                    <span class="font-monospace small text-muted">@h.Substring(0, Math.Min(15, h.Length))...</span>
+                                    <a href="/Home/RemoveBlacklist?hash=@h" class="text-success small text-decoration-none">Unban</a>
+                                </li>
+                            }
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <div id="content-firewall" class="settings-content" style="display:none;">
+                <div class="glass-panel p-4">
+                    <h5 class="fw-bold text-white mb-4">Firewall & Network</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="pe-3 d-flex flex-column"><span class="fw-bold text-white">Microsoft Defender Firewall</span><small class="text-muted">Protect your device from unauthorized access.</small></div>
+                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="switch-firewall" @(firewall ? "checked" : "") onclick="handleToggle(this, 'Firewall')" style="transform: scale(1.5); cursor: pointer;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="content-device" class="settings-content" style="display:none;">
+                <div class="glass-panel p-4">
+                    <h5 class="fw-bold text-white mb-4">Device Specifications</h5>
+                    <ul class="list-group list-group-flush bg-transparent">
+                        <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between p-3"><span class="text-muted">Device Name</span> <span class="fw-bold" style="color: var(--neon-blue)">@pcName</span></li>
+                        <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between p-3"><span class="text-muted">OS Version</span> <span>@osVersion</span></li>
+                        <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between p-3"><span class="text-muted">User Account</span> <span>@userName</span></li>
+                        <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between p-3"><span class="text-muted">Processors</span> <span>@processorCount</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="content-account" class="settings-content" style="display:none;"><div class="glass-panel p-5 text-center text-muted">Account Protection Settings (Managed by Admin)</div></div>
+
+            <div id="content-maintenance" class="settings-content" style="display:none;">
+                <div class="glass-panel p-4 mb-4 border-info" style="border-left: 4px solid var(--neon-blue);">
+                    <h5 class="fw-bold text-white mb-3 d-flex align-items-center"><span class="material-symbols-outlined me-2 text-info">folder_open</span> Report Logs Location</h5>
+                    <p class="text-muted small">Specify where VaultWare saves scan logs and action reports.</p>
+                    <form asp-action="UpdateReportLocation" method="post" class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-muted">PATH</span>
+                        <input type="text" name="customPath" class="form-control bg-dark text-white border-secondary" value="@currentReportPath" placeholder="C:\VaultWareReports">
+                        <button class="btn btn-outline-info fw-bold">UPDATE</button>
+                    </form>
+                </div>
+
+                <div class="glass-panel p-4 mb-4 border-primary" style="border-left: 4px solid #d63384;">
+                    <h5 class="fw-bold text-white mb-3 d-flex align-items-center"><span class="material-symbols-outlined me-2" style="color: #d63384;">bug_report</span> Simulation Zone</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-white">Generate Test Data</strong>
+                            <p class="text-muted small mb-0">Create fake virus files (EICAR) to test the scanner.</p>
+                        </div>
+                        <button onclick="generateData()" class="btn fw-bold px-4" style="background-color: #d63384; color: white;">GENERATE DATA</button>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-4 border-warning" style="border-left: 4px solid #ffaa00;">
+                    <h5 class="fw-bold text-white mb-3 d-flex align-items-center"><span class="material-symbols-outlined me-2 text-warning">cleaning_services</span> Reset & Clean</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-white">Clear System Cache</strong>
+                            <p class="text-muted small mb-0">Deletes old reports, resets ransomware traps, and clears debug logs.</p>
+                        </div>
+                        <button onclick="showClearCacheModal()" class="btn btn-warning fw-bold px-4">CLEAR CACHE</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="whitelistModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel border-success" style="background: rgba(10, 20, 10, 0.95);">
+            <div class="modal-header border-0"><h5 class="modal-title text-white">Add Exclusion</h5></div>
+            <form asp-action="AddWhitelist" asp-controller="Home" method="post">
+                <div class="modal-body">
+                    <input type="text" name="path" class="form-control bg-dark text-white border-secondary mb-3" placeholder="C:\Apps\MyGame" required>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-success fw-bold">ADD</button>
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">CANCEL</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="banModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel border-danger" style="background: rgba(20, 5, 5, 0.95);">
+            <div class="modal-header border-0"><h5 class="modal-title text-white">Ban Signature</h5></div>
+            <form asp-action="AddBlacklist" asp-controller="Home" method="post">
+                <div class="modal-body">
+                    <input type="text" name="hash" class="form-control bg-dark text-white border-secondary mb-3" placeholder="SHA256 Hash" required>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-danger fw-bold">BLOCK</button>
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">CANCEL</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="disableWarningModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel border-warning" style="background: rgba(40, 30, 10, 0.98);">
+            <div class="modal-body text-center p-4">
+                <div class="mb-3 text-warning"><span class="material-symbols-outlined" style="font-size: 4rem;">warning</span></div>
+                <h4 class="text-white fw-bold">Security Warning</h4>
+                <p class="text-muted">Do you want to allow this app to make changes to your device?</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-warning fw-bold px-4" onclick="confirmDisable()">Yes, Proceed</button>
+                    <button type="button" class="btn btn-outline-light px-4" onclick="cancelDisable()">No, Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="clearCacheModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel border-warning" style="background: rgba(40, 30, 10, 0.98);">
+            <div class="modal-body text-center p-4">
+                <div class="mb-3 text-warning"><span class="material-symbols-outlined" style="font-size: 4rem;">delete_forever</span></div>
+                <h4 class="text-white fw-bold">CAUTION: DATA WIPE</h4>
+                <p class="text-white">You are about to clear system caches, reset ransomware decoys, and wipe internal logs.</p>
+                <p class="text-muted small">This action cannot be undone. System performance might be temporarily affected while caches rebuild.</p>
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <a href="/Home/ClearCache" class="btn btn-warning fw-bold px-4">CLEAN NOW</a>
+                    <button type="button" class="btn btn-outline-light px-4" data-bs-dismiss="modal">CANCEL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="simulationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel border-primary" style="background: rgba(20, 10, 30, 0.98);">
+            <div class="modal-body text-center p-4">
+                <div class="mb-3" style="color: #d63384;"><span class="material-symbols-outlined" style="font-size: 4rem;">check_circle</span></div>
+                <h4 class="text-white fw-bold">Simulation Complete</h4>
+                <p class="text-white mb-3">The following test files have been generated:</p>
+                <div class="bg-dark bg-opacity-50 p-3 rounded text-start mb-4 border border-secondary">
+                    <ul class="list-unstyled mb-0 font-monospace small text-info" id="simResultsList">
+                    </ul>
+                </div>
+                <button type="button" class="btn fw-bold px-5" style="background-color: #d63384; color: white;" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .active-tab {
+        border-left: 4px solid var(--neon-blue) !important;
+        background: rgba(0, 212, 255, 0.1) !important;
+        color: white !important;
+    }
+
+    .settings-tab:hover {
+        background: rgba(255,255,255,0.05);
+        color: white !important;
+    }
+
+    .form-check-input {
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    var pendingFeature="", pendingCheckbox=null;
+
+    function showTab(t) {
+        var e = document.getElementsByClassName("settings-content");
+        for(var n=0; n<e.length; n++) e[n].style.display="none";
+
+        var a = document.getElementsByClassName("settings-tab");
+        for(n=0; n<a.length; n++) {
+            a[n].classList.remove("active-tab");
+            a[n].classList.add("text-muted");
+        }
+
+        document.getElementById("content-"+t).style.display="block";
+        document.getElementById("tab-"+t).classList.add("active-tab");
+        document.getElementById("tab-"+t).classList.remove("text-muted");
+    }
+
+    function showWhitelistModal() {
+        new bootstrap.Modal(document.getElementById("whitelistModal")).show();
+    }
+
+    function showBanModal() {
+        new bootstrap.Modal(document.getElementById("banModal")).show();
+    }
+
+    function showClearCacheModal() {
+        new bootstrap.Modal(document.getElementById("clearCacheModal")).show();
+    }
+
+    function handleToggle(e, t) {
+        pendingFeature = t;
+        pendingCheckbox = e;
+        e.checked = !e.checked; // Revert visually until confirmed
+        new bootstrap.Modal(document.getElementById("disableWarningModal")).show();
+    }
+
+    function confirmDisable() {
+        if(pendingCheckbox) pendingCheckbox.checked = !pendingCheckbox.checked; // Apply visual change
+        window.location.href = "/Home/ToggleFeature?feature=" + pendingFeature;
+    }
+
+    function cancelDisable() {
+        bootstrap.Modal.getInstance(document.getElementById("disableWarningModal")).hide();
+    }
+
+    // FIXED GENERATOR FUNCTION (Uses Modal)
+    function generateData() {
+        if(!confirm('Create fake virus files for testing?')) return;
+
+        fetch('/Home/GenerateTestData', { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    var list = document.getElementById("simResultsList");
+                    list.innerHTML = "";
+                    data.details.forEach(function(item) {
+                        list.innerHTML += "<li>" + item + "</li>";
+                    });
+                    new bootstrap.Modal(document.getElementById("simulationModal")).show();
+                } else {
+                    alert(data.message);
+                }
+            });
+    }
+</script>

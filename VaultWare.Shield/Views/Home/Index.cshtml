@@ -1,0 +1,232 @@
+﻿@model List<VaultWare.Shield.Models.AuditItem>
+@{
+    ViewData["Title"] = "System Dashboard";
+    string status = ViewBag.Status as string;
+    string alert = ViewBag.Alert as string;
+    bool isSecure = status == "ACTIVE";
+    var specs = ViewBag.Specs as VaultWare.Shield.Models.DeviceSpecs;
+}
+
+<style>
+    .header-icon-bg {
+        width: 40px;
+        height: 40px;
+        background: rgba(0, 212, 255, 0.1);
+        color: var(--neon-blue);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.1);
+    }
+
+    .quick-action-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 1.5rem 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .quick-action-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .quick-action-card:active {
+            transform: scale(0.98);
+        }
+
+    .icon-wrapper {
+        margin-bottom: 0.5rem;
+        transition: transform 0.3s ease;
+    }
+
+        .icon-wrapper .material-symbols-outlined {
+            font-size: 2.5rem;
+        }
+
+    .quick-action-card:hover .icon-wrapper {
+        transform: scale(1.15);
+    }
+
+    .text-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .action-title {
+        font-weight: 700;
+        color: #fff;
+        font-size: 1rem;
+        letter-spacing: 0.5px;
+    }
+
+    .action-desc {
+        font-size: 0.75rem;
+        color: #888;
+        margin-top: 2px;
+    }
+
+    .quick-action-card:hover .action-desc {
+        color: #bbb;
+    }
+
+    .card-cyan:hover {
+        border-bottom: 3px solid var(--neon-blue);
+    }
+
+    .card-purple:hover {
+        border-bottom: 3px solid #d63384;
+    }
+
+    .card-green:hover {
+        border-bottom: 3px solid var(--neon-green);
+    }
+
+    .card-red:hover {
+        border-bottom: 3px solid var(--neon-red);
+    }
+</style>
+
+<div class="container mt-4 fade-in-up">
+
+    @if (specs != null)
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="glass-panel p-4 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="me-4 text-center">
+                            @if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+                            {
+                                <span class="material-symbols-outlined" style="font-size: 3rem; color: #00aaff;">window</span>
+                            }
+                            else if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
+                            {
+                                <span class="material-symbols-outlined" style="font-size: 3rem; color: #ffae00;">terminal</span>
+                            }
+                            else
+                            {
+                                <span class="material-symbols-outlined" style="font-size: 3rem; color: #fff;">laptop_mac</span>
+                            }
+                            <div class="small text-muted fw-bold mt-1">@specs.OSArchitecture</div>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold text-white mb-0">@specs.HostName</h3>
+                            <p class="text-info mb-0">@specs.OSName</p>
+                            <div class="d-flex gap-3 mt-2 small text-muted">
+                                <span><span class="material-symbols-outlined align-middle" style="font-size:14px">memory</span> @specs.TotalRAM RAM</span>
+                                <span><span class="material-symbols-outlined align-middle" style="font-size:14px">developer_board</span> @specs.CoreCount Cores</span>
+                                <span><span class="material-symbols-outlined align-middle" style="font-size:14px">hard_drive</span> @specs.FreeSpace Free</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-dark border border-secondary text-muted">Agent v@specs.AgentVersion</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-7 mb-4">
+            <div class="glass-panel p-5 text-center h-100 d-flex flex-column justify-content-center border-secondary shadow-lg">
+                <p class="text-muted small text-uppercase fw-bold mb-3" style="letter-spacing: 2px;">REAL-TIME ENGINE STATUS</p>
+                <h1 class="display-4 fw-bold mb-4" style="color: @(isSecure ? "var(--neon-green)" : "var(--neon-red)"); text-shadow: 0 0 20px @(isSecure ? "rgba(0,255,136,0.3)" : "rgba(255,0,85,0.3)");">
+                    @(isSecure ? "SYSTEM SECURE" : "AT RISK")
+                </h1>
+                <div class="mb-5">
+                    <span class="material-symbols-outlined" style="font-size: 6rem; color: @(isSecure ? "var(--neon-green)" : "var(--neon-red)");">
+                        @(isSecure ? "verified_user" : "gpp_bad")
+                    </span>
+                </div>
+                <div class="bg-dark bg-opacity-50 p-3 rounded-3 mb-4 text-start font-monospace small text-muted border border-secondary">
+                    <span class="text-success">></span> @alert
+                </div>
+                <a href="/Home/Toggle" class="btn btn-lg fw-bold w-100 py-3" style="background: @(isSecure ? "var(--neon-green)" : "var(--neon-red)"); color: #000; box-shadow: 0 0 15px @(isSecure ? "var(--neon-green)" : "var(--neon-red)"); transition: all 0.3s;">
+                    @(isSecure ? "DEACTIVATE SHIELD" : "ACTIVATE SHIELD")
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-5 mb-4">
+            <div class="glass-panel p-4 h-100 d-flex flex-column justify-content-center" style="min-height: 340px;">
+                <div class="d-flex align-items-center mb-4 ps-1">
+                    <div class="header-icon-bg me-3"><span class="material-symbols-outlined">bolt</span></div>
+                    <div><h5 class="fw-bold text-white mb-0">Quick Actions</h5><small class="text-muted">SECURITY CONTROLS</small></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <a href="#" class="quick-action-card card-cyan" onclick="startScan('quick'); return false;">
+                            <div class="icon-wrapper text-info"><span class="material-symbols-outlined">flash_on</span></div>
+                            <div class="text-wrapper"><span class="action-title">Quick Scan</span><span class="action-desc">Critical areas only</span></div>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="#" class="quick-action-card card-purple" onclick="startScan('deep'); return false;">
+                            <div class="icon-wrapper" style="color:#d63384"><span class="material-symbols-outlined">travel_explore</span></div>
+                            <div class="text-wrapper"><span class="action-title">Deep Scan</span><span class="action-desc">Full system analysis</span></div>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="/Home/Protection" class="quick-action-card card-green">
+                            <div class="icon-wrapper text-success"><span class="material-symbols-outlined">admin_panel_settings</span></div>
+                            <div class="text-wrapper"><span class="action-title">Protection</span><span class="action-desc">Manage shields</span></div>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="/Home/Quarantine" class="quick-action-card card-red">
+                            <div class="icon-wrapper text-danger"><span class="material-symbols-outlined">pest_control</span></div>
+                            <div class="text-wrapper"><span class="action-title">Vault</span><span class="action-desc">Quarantined threats</span></div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-2 mb-3">
+        <h5 class="fw-bold mb-0">Recent Security Events</h5>
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">Clear Logs</button>
+            <ul class="dropdown-menu dropdown-menu-dark">
+                <li><a class="dropdown-item" href="/Home/CleanHistory?hours=24">Older than 24h</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="/Home/CleanHistory?hours=0">Clear All Logs</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="glass-panel p-0 overflow-hidden mb-5">
+        <table class="table table-dark table-hover mb-0" style="background: transparent;">
+            <thead><tr><th class="p-3 text-muted">TIME</th><th class="p-3 text-muted">ACTION</th><th class="p-3 text-muted">FILE</th><th class="p-3 text-muted">DETAILS</th></tr></thead>
+            <tbody>
+                @if (Model == null || Model.Count == 0)
+                {
+                    <tr><td colspan="4" class="text-center p-5 text-muted">No recent activity.</td></tr>
+                }
+                else
+                {
+                    foreach (var log in Model)
+                    {
+                        <tr style="cursor: pointer; border-color: rgba(255,255,255,0.05);" onclick="window.location.href='/Home/Quarantine'"><td class="p-3 text-muted small">@log.Timestamp.ToString("HH:mm:ss")</td><td class="p-3 fw-bold @log.ColorClass">@log.Action</td><td class="p-3 text-white">@log.FileName</td><td class="p-3 text-muted small">@log.Details</td></tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<script> function startScan(type) { fetch('/Home/StartScan?type=' + type, { method: 'POST' }).then(response => { if(response.ok) { window.location.href = '/Home/Scan'; } }); } </script>

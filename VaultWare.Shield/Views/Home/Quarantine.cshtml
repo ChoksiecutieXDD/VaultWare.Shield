@@ -1,0 +1,257 @@
+﻿@model List<VaultWare.Shield.Models.QuarantineItem>
+@{
+    ViewData["Title"] = "Quarantine Vault";
+    var allItems = Model ?? new List<VaultWare.Shield.Models.QuarantineItem>();
+    var quarantineList = allItems.Where(x => x.Status == "Quarantined" || x.Status == "Restored").ToList();
+    var blockedList = allItems.Where(x => x.Status == "Blocked Forever").ToList();
+    var analysisList = allItems.Where(x => x.Status.Contains("Cloud") || x.Status.Contains("Submitted")).ToList();
+}
+
+<style>
+    .nav-pills .nav-link {
+        color: #888;
+        border: 1px solid rgba(255,255,255,0.05);
+        margin-right: 10px;
+        border-radius: 8px;
+    }
+
+        .nav-pills .nav-link.active {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--neon-blue);
+            border-color: var(--neon-blue);
+        }
+
+    .action-btn {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        margin-left: 4px;
+        background: rgba(255,255,255,0.05);
+        text-decoration: none;
+        cursor: pointer;
+        border: 1px solid transparent;
+    }
+
+    .btn-restore:hover {
+        background: var(--neon-green);
+        color: black;
+    }
+
+    .btn-block:hover {
+        background: #ffaa00;
+        color: black;
+    }
+
+    .btn-analyze:hover {
+        background: var(--neon-blue);
+        color: black;
+    }
+
+    .btn-delete:hover {
+        background: var(--neon-red);
+        color: white;
+    }
+
+    .warning-icon {
+        animation: blink 2s infinite;
+        color: #ffaa00;
+    }
+    @@keyframes blink {
+        0%
+
+    {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 1;
+    }
+
+    }
+</style>
+
+<div class="container mt-4 fade-in-up">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center">
+            <div class="me-3 d-flex align-items-center justify-content-center" style="width:50px; height:50px; background:rgba(255,0,85,0.1); border-radius:12px; color:var(--neon-red);">
+                <span class="material-symbols-outlined" style="font-size: 28px;">lock_person</span>
+            </div>
+            <div>
+                <h2 class="fw-bold text-white mb-0">THREAT VAULT</h2>
+                <p class="text-muted small mb-0">Manage isolated files.</p>
+            </div>
+        </div>
+        <form asp-action="AddFile" asp-controller="Home" method="post" enctype="multipart/form-data">
+            <label class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2" style="cursor: pointer;">
+                <span class="material-symbols-outlined">upload_file</span> Manual Add
+                <input type="file" name="file" hidden onchange="this.form.submit()">
+            </label>
+        </form>
+    </div>
+
+    <ul class="nav nav-pills mb-4" id="vaultTabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pills-quarantine">Active Threats (@quarantineList.Count)</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-blocked">Blocked (@blockedList.Count)</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-analysis">Analysis (@analysisList.Count)</button></li>
+    </ul>
+
+    <div class="tab-content" id="pills-tabContent">
+
+        <div class="tab-pane fade show active" id="pills-quarantine">
+            <div class="glass-panel p-0 overflow-hidden">
+                <table class="table table-dark table-hover mb-0">
+                    <thead><tr><th class="p-3">Threat</th><th class="p-3">Path</th><th class="p-3">Analysis</th><th class="p-3 text-end">Actions</th></tr></thead>
+                    <tbody>
+                        @if (quarantineList.Count == 0)
+                        {
+                            <tr><td colspan="4" class="p-5 text-center text-muted">No active threats.</td></tr>
+                        }
+                        @foreach (var item in quarantineList)
+                        {
+                            <tr class="align-middle">
+                                <td class="p-3">
+                                    <div class="d-flex align-items-center">
+                                        <span class="material-symbols-outlined me-2 warning-icon">warning</span>
+                                        <span class="fw-bold text-white">@item.ThreatName</span>
+                                    </div>
+                                </td>
+                                <td class="p-3 small text-muted text-break">@item.OriginalPath</td>
+                                <td class="p-3">
+                                    @if (item.CloudResult.Contains("CLEAN") || item.CloudResult.Contains("Safe"))
+                                    {
+                                        <span class="badge bg-success">SAFE</span>
+                                    }
+                                    else if (item.CloudResult.Contains("Not Analyzed") || item.CloudResult.Contains("Pending"))
+                                    {
+                                        <span class="badge bg-secondary">NOT SCANNED</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">DANGEROUS</span>
+                                    }
+                                    <div class="small text-muted mt-1">@item.CloudResult</div>
+                                </td>
+                                <td class="p-3 text-end">
+                                    <a href="/Home/Block?id=@item.Id" class="action-btn btn-block" title="Block"><span class="material-symbols-outlined">block</span></a>
+                                    <a href="/Home/Analyze?id=@item.Id" class="action-btn btn-analyze" title="Analyze"><span class="material-symbols-outlined">cloud_upload</span></a>
+                                    <a href="/Home/Rescan?id=@item.Id" class="action-btn" style="color:#d63384; border-color:rgba(214,51,132,0.3)" title="Rescan"><span class="material-symbols-outlined">radar</span></a>
+
+                                    <button type="button" class="action-btn btn-restore" title="Restore"
+                                            onclick="triggerRestore('@item.Id', '@item.Severity', '@item.CloudResult')">
+                                        <span class="material-symbols-outlined">settings_backup_restore</span>
+                                    </button>
+
+                                    <a href="/Home/Delete?id=@item.Id" class="action-btn btn-delete" title="Delete"><span class="material-symbols-outlined">delete</span></a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="pills-blocked">
+            <div class="glass-panel p-0 overflow-hidden border-danger" style="border-left: 4px solid var(--neon-red);">
+                <table class="table table-dark table-hover mb-0">
+                    <tbody>
+                        @if (blockedList.Count == 0)
+                        {
+                            <tr><td class="p-5 text-center text-muted">No blocked files.</td></tr>
+                        }
+                        @foreach (var item in blockedList)
+                        {
+                            <tr>
+                                <td class="p-3 ps-4"><span class="text-white fw-bold">@item.ThreatName</span><br><small class="text-muted">@item.FileHash</small></td>
+                                <td class="p-3 text-end">
+                                    <a href="/Home/Unblock?id=@item.Id" class="btn btn-sm btn-outline-warning">Unblock</a>
+                                    <a href="/Home/Delete?id=@item.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="pills-analysis">
+            <div class="glass-panel p-0 overflow-hidden border-info" style="border-left: 4px solid var(--neon-blue);">
+                <table class="table table-dark table-hover mb-0">
+                    <tbody>
+                        @if (analysisList.Count == 0)
+                        {
+                            <tr><td class="p-5 text-center text-muted">No files in analysis.</td></tr>
+                        }
+                        @foreach (var item in analysisList)
+                        {
+                            <tr>
+                                <td class="p-3 ps-4"><span class="text-white fw-bold">@item.ThreatName</span></td>
+                                <td class="p-3 text-info">Analyzing...</td>
+                                <td class="p-3 text-end"><a href="/Home/Delete?id=@item.Id" class="btn btn-sm btn-outline-secondary">Cancel</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="dangerRestoreModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel border-danger" style="background: rgba(40, 10, 10, 0.98);">
+            <div class="modal-body text-center p-4">
+                <div class="mb-3 text-danger"><span class="material-symbols-outlined" style="font-size: 4rem;">warning</span></div>
+                <h4 class="text-white fw-bold">Caution: Unsafe File</h4>
+                <p class="text-muted">This file has not been fully verified or is marked as dangerous.</p>
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <a id="btnForceRestore" href="#" class="btn btn-outline-danger fw-bold px-4">Restore Anyway</a>
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="safeRestoreModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel border-success" style="background: rgba(10, 40, 10, 0.98);">
+            <div class="modal-body text-center p-4">
+                <div class="mb-3 text-success"><span class="material-symbols-outlined" style="font-size: 4rem;">check_circle</span></div>
+                <h4 class="text-white fw-bold">File Safe</h4>
+                <p class="text-muted">Analysis confirms this file is clean.</p>
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <a id="btnSafeRestore" href="#" class="btn btn-success fw-bold px-4">Confirm Restore</a>
+                    <button type="button" class="btn btn-outline-light px-4" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function triggerRestore(id, severity, cloudResult) {
+        // STRICT CHECK LOGIC
+        // If it says "Not Analyzed", "Pending", or severity is HIGH -> DANGER
+        var isUnknown = cloudResult.includes("Not Analyzed") || cloudResult.includes("Pending");
+        var isDangerous = severity === "HIGH" || severity === "CRITICAL" || cloudResult.includes("DANGEROUS");
+
+        if (isUnknown || isDangerous) {
+            var modalEl = document.getElementById('dangerRestoreModal');
+            document.getElementById('btnForceRestore').href = "/Home/Restore?id=" + id;
+            var modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        } else {
+            var modalEl = document.getElementById('safeRestoreModal');
+            document.getElementById('btnSafeRestore').href = "/Home/Restore?id=" + id;
+            var modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+    }
+</script>

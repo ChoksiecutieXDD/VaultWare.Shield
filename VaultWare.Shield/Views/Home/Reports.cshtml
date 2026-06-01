@@ -1,0 +1,95 @@
+﻿@model List<System.IO.FileInfo>
+@{
+    ViewData["Title"] = "Security Reports";
+}
+
+<div class="container mt-4 fade-in-up">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center">
+            <div class="me-3 header-icon-bg" style="display:flex; align-items:center; justify-content:center; width:50px; height:50px; background:rgba(255,255,255,0.1); border-radius:12px; color:white;">
+                <span class="material-symbols-outlined" style="font-size: 32px;">description</span>
+            </div>
+            <div>
+                <h2 style="font-weight: 700; letter-spacing: 1px; margin-bottom: 0;">SECURITY <span style="color:var(--neon-blue)">REPORTS</span></h2>
+                <p class="text-muted mb-0 small">Audit logs and scan summaries.</p>
+            </div>
+        </div>
+        <div>
+            <span class="badge bg-secondary p-2">Total Reports: @Model.Count</span>
+        </div>
+    </div>
+
+    <div class="glass-panel p-0 overflow-hidden">
+        @if (Model.Count > 0)
+        {
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0 align-middle" style="background: transparent;">
+                    <thead style="background: rgba(0,0,0,0.3);">
+                        <tr>
+                            <th class="ps-4">REPORT NAME</th>
+                            <th>TYPE</th>
+                            <th>DATE GENERATED</th>
+                            <th>SIZE</th>
+                            <th class="text-end pe-4">ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var file in Model)
+                        {
+                            // Determine icon and color based on filename
+                            string icon = "article";
+                            string color = "text-white";
+
+                            if (file.Name.StartsWith("Scan")) { icon = "radar"; color = "text-info"; }
+                            else if (file.Name.Contains("QUARANTINED") || file.Name.Contains("BLOCKED")) { icon = "shield"; color = "text-danger"; }
+                            else if (file.Name.Contains("RESTORED")) { icon = "history"; color = "text-success"; }
+                            else if (file.Name.Contains("OPTIMIZATION")) { icon = "speed"; color = "text-warning"; }
+
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <span class="material-symbols-outlined @color me-3">@icon</span>
+                                        <span class="fw-bold text-light">@file.Name</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (file.Name.StartsWith("Scan"))
+                                    {
+                                        <span class="badge bg-info text-dark">SCAN LOG</span>
+                                    }
+                                    else if (file.Name.StartsWith("Action"))
+                                    {
+
+                                        <span class="badge bg-secondary">ACTION LOG</span>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="badge bg-dark border border-secondary">SYSTEM</span>
+                                    }
+                                </td>
+                                <td class="text-muted font-monospace">@file.CreationTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td class="text-muted small">@(file.Length / 1024) KB</td>
+                                <td class="text-end pe-4">
+                                    <a asp-action="ViewReport" asp-route-id="@file.Name" class="btn btn-sm btn-outline-primary me-1">
+                                        <span class="material-symbols-outlined" style="font-size:16px;">visibility</span> OPEN
+                                    </a>
+                                    <a asp-action="DeleteReport" asp-route-id="@file.Name" class="btn btn-sm btn-outline-danger">
+                                        <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center p-5 text-muted">
+                <span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.5;">folder_off</span>
+                <p class="mt-2">No reports generated yet.</p>
+            </div>
+        }
+    </div>
+</div>
